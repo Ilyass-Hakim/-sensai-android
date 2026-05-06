@@ -6,20 +6,29 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.sensai.data.local.TokenManager
+import com.example.sensai.ui.auth.AuthScreen
 import com.example.sensai.ui.screens.detail.AnimeDetailScreen
 import com.example.sensai.ui.screens.home.HomeScreen
 import com.example.sensai.ui.screens.search.SearchScreen
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
+    val token by tokenManager.accessToken.collectAsState(initial = null)
     
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -63,9 +72,19 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = if (token == null) "auth" else "home",
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("auth") {
+                AuthScreen(
+                    onAuthSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable("home") {
                 HomeScreen(
                     onNavigateToDetail = { animeId ->

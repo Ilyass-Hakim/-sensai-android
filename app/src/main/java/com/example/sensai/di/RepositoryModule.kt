@@ -1,5 +1,7 @@
 package com.example.sensai.di
 
+import com.example.sensai.data.repository.AuthRepository
+import com.example.sensai.data.repository.AuthRepositoryImpl
 import com.example.sensai.data.repository.AnimeRepository
 import com.example.sensai.data.repository.AnimeRepositoryImpl
 import dagger.Binds
@@ -11,6 +13,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        authRepositoryImpl: AuthRepositoryImpl
+    ): AuthRepository
 
     @Binds
     @Singleton

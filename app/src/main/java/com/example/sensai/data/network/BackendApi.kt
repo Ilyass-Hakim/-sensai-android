@@ -7,19 +7,19 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface BackendApi {
-    @GET("search")
+    @GET("anime/search")
     suspend fun searchAnime(
         @Query("q") query: String,
         @Query("limit") limit: Int = 20
     ): JikanResponse
 
-    @GET("top")
+    @GET("anime/top")
     suspend fun getTopAnime(): JikanResponse
 
-    @GET("seasonal")
+    @GET("anime/seasonal")
     suspend fun getSeasonalAnime(): JikanResponse
 
-    @GET("{id}")
+    @GET("anime/{id}")
     suspend fun getAnimeById(
         @Path("id") id: Int
     ): JikanSingleResponse
