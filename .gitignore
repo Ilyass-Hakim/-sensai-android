@@ -30,5 +30,18 @@ render.experimental.xml
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 
+# Secrets and Env
+.env
+.env.*
+secrets.properties
+signing.properties
+
 # Android Profiling
 *.hprof
+
+# Mac/Windows OS files
+.DS_Store
+Thumbs.db
+
+# Crashlytics generated file
+com_google_firebase_crashlytics_config.json

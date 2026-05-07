@@ -4,7 +4,11 @@ import com.google.gson.annotations.SerializedName
 
 data class JikanResponse(
     @SerializedName("data")
-    val data: List<AnimeDto>
+    val data: List<AnimeDto>,
+    @SerializedName("debug_user_id")
+    val debugUserId: String? = null,
+    @SerializedName("debug_history_count")
+    val debugHistoryCount: Int? = null
 )
 
 data class JikanSingleResponse(

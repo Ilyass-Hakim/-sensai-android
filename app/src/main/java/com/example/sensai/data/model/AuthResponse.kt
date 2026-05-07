@@ -9,6 +9,8 @@ data class AuthResponse(
     val refreshToken: String,
     @SerializedName("username")
     val username: String,
+    @SerializedName("userId")
+    val userId: Long,
     @SerializedName("rank")
     val rank: String? = null
 )

@@ -39,24 +39,63 @@ class AnimeDetailViewModel @Inject constructor(
     private fun loadAnimeDetails() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            // Fetch basic details
             repository.getAnimeDetails(animeId).collect { result ->
                 result.onSuccess { data ->
-                    _uiState.update { it.copy(anime = data, isLoading = false) }
+                    _uiState.update { it.copy(anime = data) }
                 }.onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+
+            // Sync with history
+            repository.getUserHistory().collect { result ->
+                result.onSuccess { historyList ->
+                    val historyItem = historyList.find { it.animeId == animeId }
+                    _uiState.update { it.copy(watchStatus = historyItem?.status) }
+                }
+            }
+
+            // Sync with favorites
+            repository.getUserFavorites().collect { result ->
+                result.onSuccess { favoriteList ->
+                    val isFav = favoriteList.any { it.animeId == animeId }
+                    _uiState.update { it.copy(isFavorite = isFav) }
+                }
+            }
+
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun toggleFavorite() {
+        val newState = !_uiState.value.isFavorite
+        _uiState.update { it.copy(isFavorite = newState) }
+        viewModelScope.launch {
+            repository.toggleFavorite(animeId, newState).collect { result ->
+                result.onFailure { e ->
+                    // Revert on failure
+                    _uiState.update { it.copy(isFavorite = !newState, error = "Failed to update favorite: ${e.message}") }
                 }
             }
         }
     }
 
-    fun toggleFavorite() {
-        _uiState.update { it.copy(isFavorite = !it.isFavorite) }
-        // TODO: Call backend POST /api/v1/anime/favorites
-    }
-
     fun setWatchStatus(status: String) {
-        val newStatus = if (_uiState.value.watchStatus == status) null else status
+        val oldStatus = _uiState.value.watchStatus
+        val newStatus = if (oldStatus == status) null else status
         _uiState.update { it.copy(watchStatus = newStatus) }
-        // TODO: Call backend POST /api/v1/anime/history
+        
+        if (newStatus != null) {
+            viewModelScope.launch {
+                repository.addToHistory(animeId, newStatus).collect { result ->
+                    result.onFailure { e ->
+                        // Revert on failure
+                        _uiState.update { it.copy(watchStatus = oldStatus, error = "Failed to update history: ${e.message}") }
+                    }
+                }
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,6 +37,7 @@ import coil.compose.AsyncImage
 @Composable
 fun AnimeDetailScreen(
     onNavigateBack: () -> Unit,
+    onJoinDiscussion: (Int, String) -> Unit,
     viewModel: AnimeDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -172,6 +174,27 @@ fun AnimeDetailScreen(
                             }
                             Text(text = "Rank: #${anime.rank ?: "N/A"}", fontWeight = FontWeight.Bold)
                             Text(text = "Members: ${anime.members ?: "N/A"}", color = Color.Gray)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Button(
+                            onClick = { onJoinDiscussion(anime.malId, anime.title) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = com.example.sensai.ui.theme.VioletPrimary),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Chat, contentDescription = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Rejoindre la discussion",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))

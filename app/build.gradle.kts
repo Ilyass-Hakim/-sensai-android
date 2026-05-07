@@ -49,6 +49,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.8.1")
 
 // Hilt
@@ -94,6 +95,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // Krossbow STOMP
+    implementation("org.hildan.krossbow:krossbow-stomp-core:9.3.0")
+    implementation("org.hildan.krossbow:krossbow-websocket-okhttp:9.3.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

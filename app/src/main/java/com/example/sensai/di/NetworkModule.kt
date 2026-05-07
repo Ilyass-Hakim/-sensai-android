@@ -8,12 +8,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.google.gson.Gson
 import javax.inject.Singleton
 
 @Module
@@ -25,12 +27,17 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthInterceptor(tokenManager: TokenManager): Interceptor = Interceptor { chain ->
-        val token = runBlocking { tokenManager.accessToken.firstOrNull() }
+        val token: String? = runBlocking { 
+            tokenManager.accessToken.firstOrNull()
+        }
+        
         val request = if (!token.isNullOrEmpty()) {
+            android.util.Log.d("NetworkModule", "Adding Token to request: ${chain.request().url}")
             chain.request().newBuilder()
                 .addHeader("Authorization", "Bearer $token")
                 .build()
         } else {
+            android.util.Log.w("NetworkModule", "No Token found for request: ${chain.request().url}")
             chain.request()
         }
         chain.proceed(request)
@@ -42,6 +49,8 @@ object NetworkModule {
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.BODY
         return OkHttpClient.Builder()
+            .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+            .connectTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(logging)
             .build()
@@ -68,4 +77,8 @@ object NetworkModule {
     fun provideApiService(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson = Gson()
 }

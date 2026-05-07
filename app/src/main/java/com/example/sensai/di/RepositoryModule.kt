@@ -25,4 +25,10 @@ abstract class RepositoryModule {
     abstract fun bindAnimeRepository(
         animeRepositoryImpl: AnimeRepositoryImpl
     ): AnimeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiRepository(
+        aiRepositoryImpl: com.example.sensai.data.repository.AiRepositoryImpl
+    ): com.example.sensai.data.repository.AiRepository
 }

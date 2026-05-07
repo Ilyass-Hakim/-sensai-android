@@ -34,7 +34,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.login(LoginRequest(email, pass)).onSuccess { response ->
-                tokenManager.saveTokens(response.accessToken, response.refreshToken, response.username)
+                tokenManager.saveTokens(response.accessToken, response.refreshToken, response.username, response.userId)
                 _uiState.value = AuthUiState.Success
             }.onFailure { e ->
                 _uiState.value = AuthUiState.Error(e.message ?: "Erreur de connexion")
@@ -46,7 +46,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.register(RegisterRequest(email, user, pass)).onSuccess { response ->
-                tokenManager.saveTokens(response.accessToken, response.refreshToken, response.username)
+                tokenManager.saveTokens(response.accessToken, response.refreshToken, response.username, response.userId)
                 _uiState.value = AuthUiState.Success
             }.onFailure { e ->
                 _uiState.value = AuthUiState.Error(e.message ?: "Erreur d'inscription")
@@ -56,5 +56,12 @@ class AuthViewModel @Inject constructor(
     
     fun resetState() {
         _uiState.value = AuthUiState.Idle
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            tokenManager.clearAll()
+            _uiState.value = AuthUiState.Idle
+        }
     }
 }

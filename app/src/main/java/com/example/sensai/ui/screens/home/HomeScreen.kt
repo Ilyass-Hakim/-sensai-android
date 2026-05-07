@@ -7,10 +7,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,9 +28,22 @@ import com.example.sensai.ui.components.AnimeCard
 @Composable
 fun HomeScreen(
     onNavigateToDetail: (Int) -> Unit,
+    onNavigateToProfile: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val token by viewModel.token.collectAsState(initial = null)
+    val context = LocalContext.current
+
+    androidx.compose.runtime.LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Scaffold(
         topBar = {
@@ -39,10 +55,15 @@ fun HomeScreen(
                             .padding(end = 16.dp)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF6200EE)),
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { onNavigateToProfile() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("I", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = uiState.username.take(1).uppercase(),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             )
@@ -59,21 +80,12 @@ fun HomeScreen(
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
             ) {
+                // Sensei Message Bubble
+                SenseiBubble(message = uiState.senseiMessage)
+
                 // Pour toi Section
-                SectionTitle(title = "For U")
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Empty for now as requested
-                    item {
-                        Text(
-                            text = "Connect to get recommendations",
-                            color = Color.Gray,
-                            modifier = Modifier.padding(vertical = 32.dp)
-                        )
-                    }
-                }
+                SectionTitle(title = "Pour toi")
+                AnimeRow(animes = uiState.recommendations, onClick = onNavigateToDetail)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -114,3 +126,40 @@ fun AnimeRow(animes: List<AnimeDto>, onClick: (Int) -> Unit) {
         }
     }
 }
+
+@Composable
+fun SenseiBubble(message: String) {
+    Surface(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 16.dp,
+            bottomStart = 16.dp,
+            bottomEnd = 16.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("S", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+              )
+          }
+      }
+  }

@@ -2,14 +2,16 @@ package com.example.sensai.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -20,8 +22,9 @@ import com.example.sensai.ui.auth.AuthScreen
 import com.example.sensai.ui.screens.detail.AnimeDetailScreen
 import com.example.sensai.ui.screens.home.HomeScreen
 import com.example.sensai.ui.screens.search.SearchScreen
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import com.example.sensai.ui.chat.DiscussionScreen
+import com.example.sensai.ui.sensei.SenseiChatScreen
+import androidx.compose.material.icons.filled.Chat
 
 @Composable
 fun AppNavigation() {
@@ -34,7 +37,8 @@ fun AppNavigation() {
     val currentDestination = navBackStackEntry?.destination
     
     // Only show BottomNav on top-level screens
-    val showBottomNav = currentDestination?.route in listOf("home", "search")
+    val topLevelRoutes = listOf("home", "search", "sensei", "chat")
+    val showBottomNav = currentDestination?.route in topLevelRoutes
 
     Scaffold(
         bottomBar = {
@@ -66,6 +70,30 @@ fun AppNavigation() {
                             }
                         }
                     )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Face, contentDescription = "Sensei") },
+                        label = { Text("Sensei") },
+                        selected = currentDestination?.hierarchy?.any { it.route == "sensei" } == true,
+                        onClick = {
+                            navController.navigate("sensei") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
+                        label = { Text("Chat") },
+                        selected = currentDestination?.hierarchy?.any { it.route == "chat" } == true,
+                        onClick = {
+                            navController.navigate("chat") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -89,6 +117,20 @@ fun AppNavigation() {
                 HomeScreen(
                     onNavigateToDetail = { animeId ->
                         navController.navigate("detail/$animeId")
+                    },
+                    onNavigateToProfile = {
+                        navController.navigate("profile")
+                    }
+                )
+            }
+
+            composable("profile") {
+                com.example.sensai.ui.screens.profile.ProfileScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onLogout = {
+                        navController.navigate("auth") {
+                            popUpTo(0) // Clear entire backstack
+                        }
                     }
                 )
             }
@@ -100,13 +142,39 @@ fun AppNavigation() {
                     }
                 )
             }
+
+            composable("sensei") {
+                SenseiChatScreen()
+            }
+
+            composable(
+                route = "chat?animeId={animeId}&animeName={animeName}",
+                arguments = listOf(
+                    navArgument("animeId") { 
+                        type = NavType.IntType
+                        defaultValue = -1 
+                    },
+                    navArgument("animeName") { 
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val animeId = backStackEntry.arguments?.getInt("animeId") ?: -1
+                val animeName = backStackEntry.arguments?.getString("animeName")
+                DiscussionScreen(initialAnimeId = animeId, initialAnimeName = animeName)
+            }
             
             composable(
                 route = "detail/{animeId}",
                 arguments = listOf(navArgument("animeId") { type = NavType.IntType })
             ) {
                 AnimeDetailScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onJoinDiscussion = { id, name ->
+                        navController.navigate("chat?animeId=$id&animeName=$name")
+                    }
                 )
             }
         }
