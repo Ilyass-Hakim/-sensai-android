@@ -43,6 +43,11 @@ interface BackendApi {
         @Query("status") status: String
     ): Any
 
+    @retrofit2.http.DELETE("anime/history")
+    suspend fun removeFromHistory(
+        @Query("animeId") animeId: Int
+    ): Any
+
     @GET("anime/history")
     suspend fun getUserHistory(): List<com.example.sensai.data.network.dto.AnimeHistoryDto>
 
@@ -66,4 +71,15 @@ interface BackendApi {
         @Path("animeId") animeId: Int,
         @Query("animeName") animeName: String
     ): List<com.example.sensai.data.network.dto.chat.ChatRoom>
+
+    @GET("quiz/daily")
+    suspend fun getDailyQuiz(): List<com.example.sensai.data.network.dto.quiz.QuizQuestionDto>
+
+    @retrofit2.http.POST("quiz/submit")
+    suspend fun submitQuiz(
+        @retrofit2.http.Body request: com.example.sensai.data.network.dto.quiz.QuizSubmitDto
+    ): com.example.sensai.data.network.dto.quiz.QuizSessionDto
+
+    @GET("quiz/leaderboard")
+    suspend fun getLeaderboard(): List<com.example.sensai.data.network.dto.UserDto>
 }

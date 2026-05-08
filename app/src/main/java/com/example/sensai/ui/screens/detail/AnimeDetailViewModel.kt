@@ -49,27 +49,35 @@ class AnimeDetailViewModel @Inject constructor(
                 }
             }
 
-            // Sync with history
-            repository.getUserHistory().collect { result ->
-                result.onSuccess { historyList ->
-                    val historyItem = historyList.find { it.animeId == animeId }
-                    _uiState.update { it.copy(watchStatus = historyItem?.status) }
+            // Sync with history & favorites
+            val historyJob = launch {
+                repository.getUserHistory().collect { result ->
+                    result.onSuccess { historyList ->
+                        val historyItem = historyList.find { it.animeId == animeId }
+                        _uiState.update { it.copy(watchStatus = historyItem?.status) }
+                    }
+                }
+            }
+            
+            val favoritesJob = launch {
+                repository.getUserFavorites().collect { result ->
+                    result.onSuccess { favoriteList ->
+                        val isFav = favoriteList.any { it.animeId == animeId }
+                        _uiState.update { it.copy(isFavorite = isFav) }
+                    }
                 }
             }
 
-            // Sync with favorites
-            repository.getUserFavorites().collect { result ->
-                result.onSuccess { favoriteList ->
-                    val isFav = favoriteList.any { it.animeId == animeId }
-                    _uiState.update { it.copy(isFavorite = isFav) }
-                }
-            }
+            // Wait for sync to complete before showing content
+            historyJob.join()
+            favoritesJob.join()
 
             _uiState.update { it.copy(isLoading = false) }
         }
     }
 
     fun toggleFavorite() {
+        android.util.Log.d("AnimeDetailViewModel", "toggleFavorite clicked for id $animeId")
         val newState = !_uiState.value.isFavorite
         _uiState.update { it.copy(isFavorite = newState) }
         viewModelScope.launch {
@@ -83,17 +91,16 @@ class AnimeDetailViewModel @Inject constructor(
     }
 
     fun setWatchStatus(status: String) {
+        android.util.Log.d("AnimeDetailViewModel", "setWatchStatus clicked: $status for id $animeId")
         val oldStatus = _uiState.value.watchStatus
         val newStatus = if (oldStatus == status) null else status
         _uiState.update { it.copy(watchStatus = newStatus) }
         
-        if (newStatus != null) {
-            viewModelScope.launch {
-                repository.addToHistory(animeId, newStatus).collect { result ->
-                    result.onFailure { e ->
-                        // Revert on failure
-                        _uiState.update { it.copy(watchStatus = oldStatus, error = "Failed to update history: ${e.message}") }
-                    }
+        viewModelScope.launch {
+            repository.addToHistory(animeId, newStatus).collect { result ->
+                result.onFailure { e ->
+                    // Revert on failure
+                    _uiState.update { it.copy(watchStatus = oldStatus, error = "Failed to update history: ${e.message}") }
                 }
             }
         }

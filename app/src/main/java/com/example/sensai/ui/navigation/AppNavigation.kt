@@ -24,7 +24,8 @@ import com.example.sensai.ui.screens.home.HomeScreen
 import com.example.sensai.ui.screens.search.SearchScreen
 import com.example.sensai.ui.chat.DiscussionScreen
 import com.example.sensai.ui.sensei.SenseiChatScreen
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Star
+import com.example.sensai.ui.screens.quiz.QuizScreen
 
 @Composable
 fun AppNavigation() {
@@ -37,7 +38,7 @@ fun AppNavigation() {
     val currentDestination = navBackStackEntry?.destination
     
     // Only show BottomNav on top-level screens
-    val topLevelRoutes = listOf("home", "search", "sensei", "chat")
+    val topLevelRoutes = listOf("home", "search", "sensei", "quiz")
     val showBottomNav = currentDestination?.route in topLevelRoutes
 
     Scaffold(
@@ -83,11 +84,11 @@ fun AppNavigation() {
                         }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
-                        label = { Text("Chat") },
-                        selected = currentDestination?.hierarchy?.any { it.route == "chat" } == true,
+                        icon = { Icon(Icons.Default.Star, contentDescription = "Quiz") },
+                        label = { Text("Quiz") },
+                        selected = currentDestination?.hierarchy?.any { it.route == "quiz" } == true,
                         onClick = {
-                            navController.navigate("chat") {
+                            navController.navigate("quiz") {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
@@ -145,6 +146,12 @@ fun AppNavigation() {
 
             composable("sensei") {
                 SenseiChatScreen()
+            }
+
+            composable("quiz") {
+                QuizScreen(
+                    onNavigateBack = { navController.navigate("home") { popUpTo(0) } }
+                )
             }
 
             composable(

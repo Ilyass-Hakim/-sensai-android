@@ -14,10 +14,13 @@ interface AnimeRepository {
     fun getSeasonalAnime(): Flow<Result<List<AnimeDto>>>
     fun getAnimeDetails(id: Int): Flow<Result<AnimeDto>>
     fun toggleFavorite(animeId: Int, isAdding: Boolean): Flow<Result<Unit>>
-    fun addToHistory(animeId: Int, status: String): Flow<Result<Unit>>
+    fun addToHistory(animeId: Int, status: String?): Flow<Result<Unit>>
     fun getRecommendations(): Flow<Result<com.example.sensai.data.network.dto.JikanResponse>>
     fun getUserHistory(): Flow<Result<List<com.example.sensai.data.network.dto.AnimeHistoryDto>>>
     fun getUserFavorites(): Flow<Result<List<com.example.sensai.data.network.dto.FavoriteDto>>>
+    fun getDailyQuiz(): Flow<Result<List<com.example.sensai.data.network.dto.quiz.QuizQuestionDto>>>
+    fun submitQuiz(score: Int, totalQuestions: Int): Flow<Result<com.example.sensai.data.network.dto.quiz.QuizSessionDto>>
+    fun getLeaderboard(): Flow<Result<List<com.example.sensai.data.network.dto.UserDto>>>
 }
 
 class AnimeRepositoryImpl @Inject constructor(
@@ -73,9 +76,13 @@ class AnimeRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun addToHistory(animeId: Int, status: String): Flow<Result<Unit>> = flow {
+    override fun addToHistory(animeId: Int, status: String?): Flow<Result<Unit>> = flow {
         try {
-            backendApi.addToHistory(animeId, status)
+            if (status != null) {
+                backendApi.addToHistory(animeId, status)
+            } else {
+                backendApi.removeFromHistory(animeId)
+            }
             emit(Result.success(Unit))
         } catch (e: Exception) {
             emit(Result.failure(e))
@@ -103,6 +110,34 @@ class AnimeRepositoryImpl @Inject constructor(
     override fun getUserFavorites(): Flow<Result<List<com.example.sensai.data.network.dto.FavoriteDto>>> = flow {
         try {
             val response = backendApi.getUserFavorites()
+            emit(Result.success(response))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getDailyQuiz(): Flow<Result<List<com.example.sensai.data.network.dto.quiz.QuizQuestionDto>>> = flow {
+        try {
+            val response = backendApi.getDailyQuiz()
+            emit(Result.success(response))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun submitQuiz(score: Int, totalQuestions: Int): Flow<Result<com.example.sensai.data.network.dto.quiz.QuizSessionDto>> = flow {
+        try {
+            val request = com.example.sensai.data.network.dto.quiz.QuizSubmitDto(score, totalQuestions)
+            val response = backendApi.submitQuiz(request)
+            emit(Result.success(response))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getLeaderboard(): Flow<Result<List<com.example.sensai.data.network.dto.UserDto>>> = flow {
+        try {
+            val response = backendApi.getLeaderboard()
             emit(Result.success(response))
         } catch (e: Exception) {
             emit(Result.failure(e))

@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -42,6 +43,13 @@ fun AnimeDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,11 +68,13 @@ fun AnimeDetailScreen(
         },
         floatingActionButton = {
             if (uiState.anime != null) {
-                Row(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.padding(bottom = 16.dp, end = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     FloatingActionButton(
                         onClick = { viewModel.toggleFavorite() },
-                        containerColor = if (uiState.isFavorite) Color.Red else MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp)
+                        containerColor = if (uiState.isFavorite) Color.Red else MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Icon(
                             imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -74,8 +84,7 @@ fun AnimeDetailScreen(
                     }
                     FloatingActionButton(
                         onClick = { viewModel.setWatchStatus("watching") },
-                        containerColor = if (uiState.watchStatus == "watching") Color(0xFFFFA000) else MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp)
+                        containerColor = if (uiState.watchStatus == "watching") Color(0xFFFFA000) else MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
@@ -108,6 +117,7 @@ fun AnimeDetailScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(scrollState)
+                        .padding(paddingValues)
                 ) {
                     // Header Banner with Gradient
                     Box(
