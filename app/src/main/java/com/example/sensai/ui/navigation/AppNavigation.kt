@@ -41,6 +41,7 @@ private object Routes {
     const val QUIZ_HISTORY = "quiz_history"
     const val DETAIL = "detail/{animeId}"
     const val CHAT = "chat?animeId={animeId}&animeName={animeName}"
+    const val USER_PROFILE = "user_profile/{userId}"
 }
 
 @Composable
@@ -272,6 +273,17 @@ fun AppNavigation() {
             // ── Leaderboard ──────────────────────────────────────────────────────
             composable("leaderboard") {
                 com.example.sensai.ui.screens.leaderboard.LeaderboardScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onUserClick = { userId -> navController.navigate("user_profile/$userId") }
+                )
+            }
+
+            // ── User Profile (View Other Users) ──────────────────────────────────
+            composable(
+                route = Routes.USER_PROFILE,
+                arguments = listOf(navArgument("userId") { type = NavType.LongType })
+            ) {
+                com.example.sensai.ui.screens.userprofile.UserProfileScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

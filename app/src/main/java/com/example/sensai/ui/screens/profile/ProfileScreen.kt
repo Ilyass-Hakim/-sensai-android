@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -122,7 +123,7 @@ fun ProfileScreen(
                     val imageUrl = if (state.profile!!.avatarUrl!!.startsWith("http")) 
                         state.profile!!.avatarUrl 
                     else 
-                        "http://10.0.2.2:8080" + state.profile!!.avatarUrl
+                        "http://10.0.2.2:8081" + state.profile!!.avatarUrl
                         
                     AsyncImage(
                         model = ImageRequest.Builder(context)
@@ -289,20 +290,59 @@ fun ProfileScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Logout Button
-            OutlinedButton(
-                onClick = { showLogoutDialog = true },
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Location Section
+            val locationPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                if (permissions.values.all { it }) {
+                    // Permissions granted, get location
+                    val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+                    try {
+                        fusedLocationClient.getCurrentLocation(
+                            com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                            null
+                        ).addOnSuccessListener { location ->
+                            location?.let {
+                                viewModel.updateLocation(it.latitude, it.longitude)
+                            } ?: run {
+                                Toast.makeText(context, "Could not get location. Make sure GPS is on.", Toast.LENGTH_SHORT).show()
+                            }
+                        }.addOnFailureListener { e ->
+                            Toast.makeText(context, "Location error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: SecurityException) {
+                        Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            Button(
+                onClick = {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                colors = ButtonDefaults.buttonColors(containerColor = BgCard),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
+                Icon(Icons.Default.LocationOn, contentDescription = null, tint = VioletPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout", fontWeight = FontWeight.Bold)
+                Text("Share Location", color = TextPrimary)
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Logout Button
             
             Spacer(modifier = Modifier.height(24.dp))
         }

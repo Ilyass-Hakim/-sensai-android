@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -43,6 +45,10 @@ import com.example.sensai.ui.theme.TextPrimary
 import com.example.sensai.ui.theme.TextSecondary
 import com.example.sensai.ui.theme.VioletPrimary
 import com.example.sensai.ui.theme.VioletLight
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import coil.compose.AsyncImagePainter
+import coil.request.ImageRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,14 +239,39 @@ private fun HistoryItemCard(
         ) {
             // Add image here
             if (item.animeImageUrl != null) {
-                coil.compose.AsyncImage(
-                    model = item.animeImageUrl,
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.animeImageUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = item.animeTitle,
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     modifier = Modifier
                         .size(width = 60.dp, height = 80.dp)
                         .clip(RoundedCornerShape(8.dp))
-                )
+                ) {
+                    when (painter.state) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            }
+                        }
+                        is AsyncImagePainter.State.Error -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(BgElevated),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.BrokenImage, contentDescription = null, tint = TextMuted, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                        else -> SubcomposeAsyncImageContent()
+                    }
+                }
             } else {
                 Box(
                     modifier = Modifier
@@ -363,14 +394,39 @@ private fun FavoriteItemCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (item.animeImageUrl != null) {
-                coil.compose.AsyncImage(
-                    model = item.animeImageUrl,
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.animeImageUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = item.animeTitle,
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     modifier = Modifier
                         .size(width = 60.dp, height = 80.dp)
                         .clip(RoundedCornerShape(8.dp))
-                )
+                ) {
+                    when (painter.state) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            }
+                        }
+                        is AsyncImagePainter.State.Error -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(BgElevated),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.BrokenImage, contentDescription = null, tint = TextMuted, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                        else -> SubcomposeAsyncImageContent()
+                    }
+                }
             } else {
                 Box(
                     modifier = Modifier

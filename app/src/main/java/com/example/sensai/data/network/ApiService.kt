@@ -30,4 +30,10 @@ interface ApiService {
     @Multipart
     @POST("users/avatar")
     suspend fun uploadAvatar(@Part image: MultipartBody.Part): UserProfileDto
+
+    @GET("users/{userId}")
+    suspend fun getUserById(@retrofit2.http.Path("userId") userId: Long): UserProfileDto
+
+    @PUT("users/my-location")
+    suspend fun updateLocation(@Body request: com.example.sensai.data.network.dto.LocationRequest): UserProfileDto
 }

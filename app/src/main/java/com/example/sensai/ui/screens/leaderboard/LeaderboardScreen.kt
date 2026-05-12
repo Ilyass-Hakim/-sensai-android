@@ -2,6 +2,7 @@ package com.example.sensai.ui.screens.leaderboard
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,13 +23,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import coil.compose.AsyncImagePainter
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.example.sensai.data.network.dto.UserDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
     onNavigateBack: () -> Unit,
+    onUserClick: (Long) -> Unit,
     viewModel: LeaderboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -68,7 +75,7 @@ fun LeaderboardScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     itemsIndexed(uiState.users) { index, user ->
-                        LeaderboardItem(index = index, user = user)
+                        LeaderboardItem(index = index, user = user, onClick = { onUserClick(user.id) })
                     }
                 }
             }
@@ -77,7 +84,7 @@ fun LeaderboardScreen(
 }
 
 @Composable
-fun LeaderboardItem(index: Int, user: UserDto) {
+fun LeaderboardItem(index: Int, user: UserDto, onClick: () -> Unit) {
     val isTop3 = index < 3
     val rankColor = when (index) {
         0 -> Color(0xFFFFD700) // Gold
@@ -99,7 +106,9 @@ fun LeaderboardItem(index: Int, user: UserDto) {
         ),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isTop3) 8.dp else 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -129,15 +138,42 @@ fun LeaderboardItem(index: Int, user: UserDto) {
             Spacer(modifier = Modifier.width(16.dp))
 
             // Avatar
-            AsyncImage(
-                model = user.avatarUrl ?: "https://api.dicebear.com/7.x/avataaars/png?seed=${user.username}",
+            val resolvedAvatarUrl = when {
+                user.avatarUrl == null -> "https://api.dicebear.com/7.x/avataaars/png?seed=${user.username}"
+                user.avatarUrl.startsWith("http") -> user.avatarUrl
+                else -> "http://10.0.2.2:8081${user.avatarUrl}"
+            }
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(resolvedAvatarUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = "Avatar",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        }
+                    }
+                    is AsyncImagePainter.State.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(imageVector = Icons.Default.BrokenImage, contentDescription = null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                        }
+                    }
+                    else -> SubcomposeAsyncImageContent()
+                }
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 

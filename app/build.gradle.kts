@@ -10,15 +10,23 @@ plugins {
 android {
     namespace = "com.example.sensai"
     compileSdk {
-        version = release(36)
+        version = 35 // Fixed to integer
+    }
+
+    val localProperties = java.util.Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
     }
 
     defaultConfig {
         applicationId = "com.example.sensai"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -99,6 +107,11 @@ dependencies {
     // Krossbow STOMP
     implementation("org.hildan.krossbow:krossbow-stomp-core:9.3.0")
     implementation("org.hildan.krossbow:krossbow-websocket-okhttp:9.3.0")
+
+    // Google Maps
+    implementation("com.google.maps.android:maps-compose:6.1.2")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

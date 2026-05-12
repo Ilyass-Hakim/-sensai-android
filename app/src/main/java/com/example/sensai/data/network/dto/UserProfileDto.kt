@@ -13,5 +13,7 @@ data class UserProfileDto(
     @SerializedName("avatarUrl") val avatarUrl: String?,
     @SerializedName("preferredGenres") val preferredGenres: List<String>?,
     @SerializedName("animeCompleted") val animeCompleted: Int,
-    @SerializedName("favoritesCount") val favoritesCount: Int
+    @SerializedName("favoritesCount") val favoritesCount: Int,
+    @SerializedName("latitude") val latitude: Double?,
+    @SerializedName("longitude") val longitude: Double?
 )

@@ -163,6 +163,25 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateLocation(latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            try {
+                val request = com.example.sensai.data.network.dto.LocationRequest(latitude, longitude)
+                val updatedProfile = apiService.updateLocation(request)
+                _state.update { 
+                    it.copy(
+                        isLoading = false, 
+                        profile = updatedProfile,
+                        successMessage = "Location updated successfully!"
+                    ) 
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to update location") }
+            }
+        }
+    }
+
     fun clearMessages() {
         _state.update { it.copy(error = null, successMessage = null) }
     }
