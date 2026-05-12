@@ -13,14 +13,15 @@ interface AnimeRepository {
     fun getTopAnime(): Flow<Result<List<AnimeDto>>>
     fun getSeasonalAnime(): Flow<Result<List<AnimeDto>>>
     fun getAnimeDetails(id: Int): Flow<Result<AnimeDto>>
-    fun toggleFavorite(animeId: Int, isAdding: Boolean): Flow<Result<Unit>>
-    fun addToHistory(animeId: Int, status: String?): Flow<Result<Unit>>
+    fun toggleFavorite(animeId: Int, isAdding: Boolean, title: String? = null, imageUrl: String? = null): Flow<Result<Unit>>
+    fun addToHistory(animeId: Int, status: String?, title: String? = null, imageUrl: String? = null): Flow<Result<Unit>>
     fun getRecommendations(): Flow<Result<com.example.sensai.data.network.dto.JikanResponse>>
     fun getUserHistory(): Flow<Result<List<com.example.sensai.data.network.dto.AnimeHistoryDto>>>
     fun getUserFavorites(): Flow<Result<List<com.example.sensai.data.network.dto.FavoriteDto>>>
     fun getDailyQuiz(): Flow<Result<List<com.example.sensai.data.network.dto.quiz.QuizQuestionDto>>>
     fun submitQuiz(score: Int, totalQuestions: Int): Flow<Result<com.example.sensai.data.network.dto.quiz.QuizSessionDto>>
     fun getLeaderboard(): Flow<Result<List<com.example.sensai.data.network.dto.UserDto>>>
+    fun getQuizHistory(): Flow<Result<List<com.example.sensai.data.network.dto.quiz.QuizSessionDto>>>
 }
 
 class AnimeRepositoryImpl @Inject constructor(
@@ -63,10 +64,10 @@ class AnimeRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun toggleFavorite(animeId: Int, isAdding: Boolean): Flow<Result<Unit>> = flow {
+    override fun toggleFavorite(animeId: Int, isAdding: Boolean, title: String?, imageUrl: String?): Flow<Result<Unit>> = flow {
         try {
             if (isAdding) {
-                backendApi.addToFavorites(animeId)
+                backendApi.addToFavorites(animeId, title, imageUrl)
             } else {
                 backendApi.removeFromFavorites(animeId)
             }
@@ -76,10 +77,10 @@ class AnimeRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun addToHistory(animeId: Int, status: String?): Flow<Result<Unit>> = flow {
+    override fun addToHistory(animeId: Int, status: String?, title: String?, imageUrl: String?): Flow<Result<Unit>> = flow {
         try {
             if (status != null) {
-                backendApi.addToHistory(animeId, status)
+                backendApi.addToHistory(animeId, title, imageUrl, status)
             } else {
                 backendApi.removeFromHistory(animeId)
             }
@@ -138,6 +139,15 @@ class AnimeRepositoryImpl @Inject constructor(
     override fun getLeaderboard(): Flow<Result<List<com.example.sensai.data.network.dto.UserDto>>> = flow {
         try {
             val response = backendApi.getLeaderboard()
+            emit(Result.success(response))
+        } catch (e: Exception) {
+            emit(Result.failure(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getQuizHistory(): Flow<Result<List<com.example.sensai.data.network.dto.quiz.QuizSessionDto>>> = flow {
+        try {
+            val response = backendApi.getQuizHistory()
             emit(Result.success(response))
         } catch (e: Exception) {
             emit(Result.failure(e))

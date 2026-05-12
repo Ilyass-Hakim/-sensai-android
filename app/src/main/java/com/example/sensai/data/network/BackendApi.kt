@@ -29,7 +29,9 @@ interface BackendApi {
 
     @retrofit2.http.POST("anime/favorites")
     suspend fun addToFavorites(
-        @Query("animeId") animeId: Int
+        @Query("animeId") animeId: Int,
+        @Query("title") title: String?,
+        @Query("imageUrl") imageUrl: String?
     ): Any
 
     @retrofit2.http.DELETE("anime/favorites")
@@ -40,6 +42,8 @@ interface BackendApi {
     @retrofit2.http.POST("anime/history")
     suspend fun addToHistory(
         @Query("animeId") animeId: Int,
+        @Query("title") title: String?,
+        @Query("imageUrl") imageUrl: String?,
         @Query("status") status: String
     ): Any
 
@@ -80,6 +84,9 @@ interface BackendApi {
         @retrofit2.http.Body request: com.example.sensai.data.network.dto.quiz.QuizSubmitDto
     ): com.example.sensai.data.network.dto.quiz.QuizSessionDto
 
-    @GET("quiz/leaderboard")
+    @GET("users/leaderboard")
     suspend fun getLeaderboard(): List<com.example.sensai.data.network.dto.UserDto>
+
+    @GET("quiz/history")
+    suspend fun getQuizHistory(): List<com.example.sensai.data.network.dto.quiz.QuizSessionDto>
 }

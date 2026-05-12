@@ -117,7 +117,7 @@ fun AnimeDetailScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(scrollState)
-                        .padding(paddingValues)
+                        .padding(bottom = paddingValues.calculateBottomPadding())
                 ) {
                     // Header Banner with Gradient
                     Box(

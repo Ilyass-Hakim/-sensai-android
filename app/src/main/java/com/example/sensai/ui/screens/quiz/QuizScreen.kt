@@ -28,6 +28,7 @@ import com.example.sensai.ui.theme.VioletPrimary
 @Composable
 fun QuizScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToHistory: () -> Unit = {},
     viewModel: QuizViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -37,7 +38,7 @@ fun QuizScreen(
             CircularProgressIndicator(color = VioletPrimary)
         }
     } else if (uiState.isFinished) {
-        ScoreScreen(uiState = uiState, onNavigateBack = onNavigateBack)
+        ScoreScreen(uiState = uiState, onNavigateBack = onNavigateBack, onNavigateToHistory = onNavigateToHistory)
     } else if (uiState.questions.isNotEmpty()) {
         val currentQuestion = uiState.questions[uiState.currentQuestionIndex]
         // Combine answers and shuffle them only once per question
@@ -219,7 +220,11 @@ fun AnswerButton(
 }
 
 @Composable
-fun ScoreScreen(uiState: QuizUiState, onNavigateBack: () -> Unit) {
+fun ScoreScreen(
+    uiState: QuizUiState,
+    onNavigateBack: () -> Unit,
+    onNavigateToHistory: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -279,6 +284,19 @@ fun ScoreScreen(uiState: QuizUiState, onNavigateBack: () -> Unit) {
             shape = RoundedCornerShape(16.dp)
         ) {
             Text("Retour à l'accueil", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onNavigateToHistory,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, VioletPrimary),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("View Quiz History", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = VioletPrimary)
         }
     }
 }

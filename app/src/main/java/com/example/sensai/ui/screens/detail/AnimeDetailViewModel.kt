@@ -80,8 +80,10 @@ class AnimeDetailViewModel @Inject constructor(
         android.util.Log.d("AnimeDetailViewModel", "toggleFavorite clicked for id $animeId")
         val newState = !_uiState.value.isFavorite
         _uiState.update { it.copy(isFavorite = newState) }
+        val title = _uiState.value.anime?.title
+        val imageUrl = _uiState.value.anime?.images?.jpg?.imageUrl
         viewModelScope.launch {
-            repository.toggleFavorite(animeId, newState).collect { result ->
+            repository.toggleFavorite(animeId, newState, title, imageUrl).collect { result ->
                 result.onFailure { e ->
                     // Revert on failure
                     _uiState.update { it.copy(isFavorite = !newState, error = "Failed to update favorite: ${e.message}") }
@@ -95,9 +97,11 @@ class AnimeDetailViewModel @Inject constructor(
         val oldStatus = _uiState.value.watchStatus
         val newStatus = if (oldStatus == status) null else status
         _uiState.update { it.copy(watchStatus = newStatus) }
+        val title = _uiState.value.anime?.title
+        val imageUrl = _uiState.value.anime?.images?.jpg?.imageUrl
         
         viewModelScope.launch {
-            repository.addToHistory(animeId, newStatus).collect { result ->
+            repository.addToHistory(animeId, newStatus, title, imageUrl).collect { result ->
                 result.onFailure { e ->
                     // Revert on failure
                     _uiState.update { it.copy(watchStatus = oldStatus, error = "Failed to update history: ${e.message}") }

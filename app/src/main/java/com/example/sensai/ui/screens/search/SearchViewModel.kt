@@ -13,6 +13,7 @@ import javax.inject.Inject
 data class SearchUiState(
     val query: String = "",
     val searchResults: List<AnimeDto> = emptyList(),
+    val topAnime: List<AnimeDto> = emptyList(),
     val isLoading: Boolean = false,
     val selectedMoodIndex: Int = -1,
     val error: String? = null
@@ -30,6 +31,8 @@ class SearchViewModel @Inject constructor(
     private val searchQueryFlow = MutableStateFlow("")
 
     init {
+        loadTopAnime()
+
         viewModelScope.launch {
             searchQueryFlow
                 .debounce(400)
@@ -38,6 +41,19 @@ class SearchViewModel @Inject constructor(
                 .collectLatest { query ->
                     performSearch(query)
                 }
+        }
+    }
+
+    private fun loadTopAnime() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            repository.getTopAnime().collect { result ->
+                result.onSuccess { data ->
+                    _uiState.update { it.copy(topAnime = data, isLoading = false) }
+                }.onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
+            }
         }
     }
 
