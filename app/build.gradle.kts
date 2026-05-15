@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,11 +11,9 @@ plugins {
 
 android {
     namespace = "com.example.sensai"
-    compileSdk {
-        version = 35 // Fixed to integer
-    }
+    compileSdk = 36
 
-    val localProperties = java.util.Properties()
+    val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         localProperties.load(localPropertiesFile.inputStream())
@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.example.sensai"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -90,6 +90,7 @@ dependencies {
 
 // Media3 ExoPlayer
     implementation("androidx.media3:media3-exoplayer:1.4.0")
+    implementation("androidx.media3:media3-ui:1.4.0")
 
 // Firebase BOM + FCM
     implementation(platform("com.google.firebase:firebase-bom:33.3.0"))

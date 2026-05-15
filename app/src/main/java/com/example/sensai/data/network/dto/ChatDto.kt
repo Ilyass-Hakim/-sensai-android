@@ -7,5 +7,6 @@ data class ChatRequest(
 data class ChatResponse(
     val text: String,
     val emotion: String,
-    val audioBase64: String? = null
+    val audioBase64: String? = null,
+    val videoBase64: String? = null
 )

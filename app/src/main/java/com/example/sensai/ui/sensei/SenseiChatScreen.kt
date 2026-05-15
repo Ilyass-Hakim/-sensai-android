@@ -55,19 +55,26 @@ fun SenseiChatScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.4f)
-                .padding(top = 40.dp),
+                .fillMaxHeight(0.5f)
+                .padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(280.dp) // Made significantly larger
                     .clip(CircleShape)
                     .background(BgCard)
                     .border(2.dp, VioletPrimary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text("S", fontSize = 48.sp, color = VioletPrimary, fontWeight = FontWeight.Bold)
+                if (uiState.currentVideoBase64 != null) {
+                    com.example.sensai.ui.components.Base64VideoPlayer(
+                        base64Video = uiState.currentVideoBase64!!,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Text("S", fontSize = 48.sp, color = VioletPrimary, fontWeight = FontWeight.Bold)
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -77,8 +84,8 @@ fun SenseiChatScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Ton guide anime personnel",
-                color = TextSecondary,
+                text = if (uiState.isTyping) "En train de réfléchir..." else "Ton guide anime personnel",
+                color = if (uiState.isTyping) VioletPrimary else TextSecondary,
                 fontSize = 14.sp
             )
         }
@@ -87,7 +94,7 @@ fun SenseiChatScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.65f) // Slightly more to cover the curve overlap
+                .fillMaxHeight(0.55f) // Adjusted for larger avatar
                 .align(Alignment.BottomCenter)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {

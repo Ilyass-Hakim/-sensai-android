@@ -21,14 +21,16 @@ data class Message(
     val text: String,
     val isFromUser: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
-    val audioBase64: String? = null
+    val audioBase64: String? = null,
+    val videoBase64: String? = null
 )
 
 data class SenseiUiState(
     val messages: List<Message> = emptyList(),
     val isTyping: Boolean = false,
     val inputText: String = "",
-    val isVoiceEnabled: Boolean = true
+    val isVoiceEnabled: Boolean = true,
+    val currentVideoBase64: String? = null
 )
 
 
@@ -44,6 +46,9 @@ class SenseiViewModel @Inject constructor(
 
     private val _audioEvents = MutableSharedFlow<String>()
     val audioEvents = _audioEvents.asSharedFlow()
+
+    private val _videoEvents = MutableSharedFlow<String>()
+    val videoEvents = _videoEvents.asSharedFlow()
 
     init {
         // Observe voice preference
@@ -103,9 +108,12 @@ class SenseiViewModel @Inject constructor(
                         )
                     }
                     
-                    // Trigger audio playback if available AND enabled
+                    // Trigger playback if available AND enabled
                     if (_uiState.value.isVoiceEnabled) {
-                        response.audioBase64?.let { 
+                        response.videoBase64?.let { 
+                            _videoEvents.emit(it)
+                            _uiState.update { state -> state.copy(currentVideoBase64 = it) }
+                        } ?: response.audioBase64?.let { 
                             _audioEvents.emit(it)
                         }
                     }

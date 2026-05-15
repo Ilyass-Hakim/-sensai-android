@@ -7,7 +7,9 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
+
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
@@ -86,6 +88,26 @@ fun AppNavigation() {
                         navController.navigate("leaderboard")
                     },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                NavigationDrawerItem(
+                    label = { Text("Logout") },
+                    selected = false,
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout") },
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                            tokenManager.clearAll()
+                            navController.navigate(Routes.AUTH) {
+                                popUpTo(0)
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedIconColor = MaterialTheme.colorScheme.error,
+                        unselectedTextColor = MaterialTheme.colorScheme.error
+                    )
                 )
             }
         }
