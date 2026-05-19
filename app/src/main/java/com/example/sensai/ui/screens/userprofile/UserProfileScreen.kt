@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,38 +91,57 @@ fun UserProfileContent(profile: UserProfileDto) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Avatar
-        val resolvedAvatarUrl = when {
-            profile.avatarUrl == null -> "https://api.dicebear.com/7.x/avataaars/png?seed=${profile.username}"
-            profile.avatarUrl.startsWith("http") -> profile.avatarUrl
-            else -> "http://10.0.2.2:8081${profile.avatarUrl}"
-        }
-
-        SubcomposeAsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(resolvedAvatarUrl)
-                .crossfade(true)
-                .build(),
-            contentDescription = "Avatar",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(BgCard)
-        ) {
-            when (painter.state) {
-                is AsyncImagePainter.State.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 2.dp, color = VioletPrimary)
+        if (profile.avatarUrl == null) {
+            // Default avatar: purple Person icon on dark circular background (same as leaderboard)
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(BgCard),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Default Avatar",
+                    tint = VioletPrimary,
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+        } else {
+            val resolvedAvatarUrl = if (profile.avatarUrl.startsWith("http")) {
+                profile.avatarUrl
+            } else {
+                "http://10.0.2.2:8081${profile.avatarUrl}"
+            }
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(resolvedAvatarUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Avatar",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(BgCard)
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 2.dp, color = VioletPrimary)
+                        }
                     }
-                }
-                is AsyncImagePainter.State.Error -> {
-                    Box(modifier = Modifier.fillMaxSize().background(BgCard), contentAlignment = Alignment.Center) {
-                        Icon(imageVector = Icons.Default.BrokenImage, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(40.dp))
+                    is AsyncImagePainter.State.Error -> {
+                        // On error also fall back to default icon
+                        Box(modifier = Modifier.fillMaxSize().background(BgCard), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = VioletPrimary, modifier = Modifier.size(64.dp))
+                        }
                     }
+                    else -> SubcomposeAsyncImageContent()
                 }
-                else -> SubcomposeAsyncImageContent()
             }
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

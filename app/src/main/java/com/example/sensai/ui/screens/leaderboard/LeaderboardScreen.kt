@@ -10,8 +10,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -138,40 +139,64 @@ fun LeaderboardItem(index: Int, user: UserDto, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             // Avatar
-            val resolvedAvatarUrl = when {
-                user.avatarUrl == null -> "https://api.dicebear.com/7.x/avataaars/png?seed=${user.username}"
-                user.avatarUrl.startsWith("http") -> user.avatarUrl
-                else -> "http://10.0.2.2:8081${user.avatarUrl}"
-            }
-            SubcomposeAsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(resolvedAvatarUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "Avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                when (painter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            if (user.avatarUrl == null) {
+                // Default avatar: purple Person icon on a dark circular background
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1A1635)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Default Avatar",
+                        tint = com.example.sensai.ui.theme.VioletPrimary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            } else {
+                val resolvedAvatarUrl = if (user.avatarUrl.startsWith("http")) {
+                    user.avatarUrl
+                } else {
+                    "http://10.0.2.2:8081${user.avatarUrl}"
+                }
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(resolvedAvatarUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1A1635))
+                ) {
+                    when (painter.state) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            }
                         }
-                    }
-                    is AsyncImagePainter.State.Error -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(imageVector = Icons.Default.BrokenImage, contentDescription = null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                        is AsyncImagePainter.State.Error -> {
+                            // On load error, fall back to default avatar style
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFF1A1635)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = com.example.sensai.ui.theme.VioletPrimary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
+                        else -> SubcomposeAsyncImageContent()
                     }
-                    else -> SubcomposeAsyncImageContent()
                 }
             }
 

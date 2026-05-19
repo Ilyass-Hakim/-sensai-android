@@ -199,8 +199,11 @@ private fun StatBubble(value: String, label: String) {
 
 @Composable
 private fun QuizSessionCard(session: QuizSessionDto) {
+    // score is stored as correctAnswers * 10 (10 pts per correct answer).
+    // correctAnswers = score / 10, accuracy = correctAnswers / totalQuestions * 100.
+    val correctAnswers = session.score / 10
     val accuracy = if (session.totalQuestions > 0)
-        (session.score.toFloat() / session.totalQuestions * 100).roundToInt()
+        (correctAnswers.toFloat() / session.totalQuestions * 100f).roundToInt().coerceIn(0, 100)
     else 0
 
     val accuracyColor = when {
@@ -237,7 +240,7 @@ private fun QuizSessionCard(session: QuizSessionDto) {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${session.score} / ${session.totalQuestions} correct",
+                        text = "${correctAnswers} / ${session.totalQuestions} correct",
                         color = TextPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
@@ -249,7 +252,7 @@ private fun QuizSessionCard(session: QuizSessionDto) {
                     color = Color(0xFFFFD700).copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "+${session.score * 2} XP",
+                        text = "+${session.score} XP",
                         color = Color(0xFFFFD700),
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,

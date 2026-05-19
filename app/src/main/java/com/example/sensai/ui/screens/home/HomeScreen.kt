@@ -1,5 +1,7 @@
 package com.example.sensai.ui.screens.home
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,9 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
 import androidx.compose.ui.Alignment
@@ -28,11 +28,24 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import com.example.sensai.data.network.dto.AnimeDto
 import com.example.sensai.ui.components.AnimeCard
+import kotlinx.coroutines.delay
+
+// All images served from the Spring Boot static folder
+private val BANNER_IMAGES = listOf(
+    "http://10.0.2.2:8081/imu.jpg",
+    "http://10.0.2.2:8081/luffy_gear5.png",
+    "http://10.0.2.2:8081/guts_eye.jpg",
+    "http://10.0.2.2:8081/berserk.jpg",
+    "http://10.0.2.2:8081/luffy.jpeg",
+    "http://10.0.2.2:8081/zorooo.jpeg",
+    "http://10.0.2.2:8081/download_1.jpeg",
+    "http://10.0.2.2:8081/download_2.jpeg",
+    "http://10.0.2.2:8081/home_banner.jpeg"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,84 +95,13 @@ fun HomeScreen(
                     .padding(bottom = paddingValues.calculateBottomPadding())
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header Banner with Gradient
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                ) {
-                    SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data("http://10.0.2.2:8081/Home.jpeg")
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Home Banner",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        when (painter.state) {
-                            is AsyncImagePainter.State.Loading -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(color = Color.White)
-                                }
-                            }
-                            is AsyncImagePainter.State.Error -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color.DarkGray),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.BrokenImage,
-                                        contentDescription = "Banner Error",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                }
-                            }
-                            else -> SubcomposeAsyncImageContent()
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        MaterialTheme.colorScheme.background
-                                    ),
-                                    startY = 300f,
-                                    endY = 800f
-                                )
-                            )
-                    )
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Hello \uD83D\uDC4B",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Text(
-                            text = uiState.username,
-                            color = Color.LightGray,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
+                // Header Banner — auto-cycling slideshow
+                BannerSlideshow(
+                    background = MaterialTheme.colorScheme.background
+                )
 
-                Spacer(modifier = Modifier.height(8.dp))
 
-                // Sensei Message Bubble
-                SenseiBubble(message = uiState.senseiMessage)
 
-                // Pour toi Section
                 SectionTitle(title = "Pour toi")
                 AnimeRow(animes = uiState.recommendations, onClick = onNavigateToDetail)
 
@@ -240,3 +182,36 @@ fun SenseiBubble(message: String) {
       }
   }
 
+
+@Composable
+fun BannerSlideshow(background: Color) {
+    var currentIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(4_000L)
+            currentIndex = (currentIndex + 1) % BANNER_IMAGES.size
+        }
+    }
+    Box(modifier = Modifier.fillMaxWidth().height(384.dp)) {
+        Crossfade(targetState = currentIndex, animationSpec = tween(durationMillis = 800), label = "banner_crossfade") { idx ->
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(BANNER_IMAGES[idx]).crossfade(false).build(),
+                contentDescription = "Banner",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> Box(Modifier.fillMaxSize().background(Color.DarkGray))
+                    is AsyncImagePainter.State.Error -> Box(Modifier.fillMaxSize().background(Color.DarkGray), Alignment.Center) {
+                        Icon(Icons.Default.BrokenImage, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                    }
+                    else -> SubcomposeAsyncImageContent()
+                }
+            }
+        }
+        // Bottom gradient bleed
+        Box(modifier = Modifier.fillMaxSize().background(
+            Brush.verticalGradient(listOf(Color.Transparent, background), startY = 320f, endY = 960f)
+        ))
+    }
+}

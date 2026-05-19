@@ -17,17 +17,21 @@ data class QuizHistoryUiState(
     val sessions: List<QuizSessionDto> = emptyList(),
     val error: String? = null
 ) {
-    val totalXp: Int get() = sessions.sumOf { it.score * 2 }
-    val bestScore: Int get() = sessions.maxOfOrNull { it.score } ?: 0
+    // score is stored as correctAnswers * 10 (10 pts per correct answer).
+    // XP earned per session = score. Correct answers = score / 10.
+    val totalXp: Int get() = sessions.sumOf { it.score }
+    val bestScore: Int get() = sessions.maxOfOrNull { it.score / 10 } ?: 0
     val totalGames: Int get() = sessions.size
     val averageScore: Double
         get() = if (sessions.isEmpty()) 0.0
-                else sessions.sumOf { it.score }.toDouble() / sessions.size
+                else sessions.sumOf { it.score / 10 }.toDouble() / sessions.size
     val averageAccuracy: Double
         get() = if (sessions.isEmpty()) 0.0
-                else sessions.sumOf { s ->
-                    if (s.totalQuestions > 0) s.score.toDouble() / s.totalQuestions else 0.0
-                } / sessions.size * 100
+                else (sessions.sumOf { s ->
+                    if (s.totalQuestions > 0)
+                        (s.score / 10).toDouble() / s.totalQuestions
+                    else 0.0
+                } / sessions.size * 100.0).coerceIn(0.0, 100.0)
 }
 
 @HiltViewModel
